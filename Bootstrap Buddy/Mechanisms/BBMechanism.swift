@@ -104,45 +104,58 @@ class BBMechanism: NSObject {
         else { return nil }
         return s.replacingOccurrences(of: "\0", with: "") as NSString
     }
-
-    // fdesetup Errors
-    private enum FileVaultError: Error {
-        case fdeSetupFailed(retCode: Int32)
+    
+    // profiles Errors
+    private enum ProfilesError: Error {
+        case profilesFailed(retCode: Int32)
         case outputPlistNull
         case outputPlistMalformed
     }
 
-    // Check if some information on filevault whether it's encrypted and if decrypting.
-    func getFVEnabled() -> (encrypted: Bool, decrypting: Bool) {
-        os_log("Getting FileVault status", log: BBMechanism.log, type: .default)
+    // Check Bootstrap Token status, whether it's supported and escrowed:
+    func getBootstrapStatus() -> (supported: Bool, escrowed: Bool) {
+        os_log("Getting Bootstrap Token status…", log: BBMechanism.log, type: .default)
         let task = Process()
-        task.launchPath = "/usr/bin/fdesetup"
-        task.arguments = ["status"]
+        task.launchPath = "/usr/bin/profiles"
+        task.arguments = ["status", "-type", "bootstraptoken"]
         let pipe = Pipe()
         task.standardOutput = pipe
         task.launch()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         guard let output: String = String(data: data, encoding: String.Encoding.utf8)
         else { return (false, false) }
-        if (output.range(of: "FileVault is On.")) != nil {
-            os_log("FileVault is ON", log: BBMechanism.log, type: .default)
-            return (true, false)
-        } else if output.range(of: "Decryption in progress:") != nil {
-            os_log("FileVault is DECRYPTING", log: BBMechanism.log, type: .error)
-            return (true, true)
+        if (output.range(of: "Bootstrap Token supported on server: YES")) != nil {
+            if (output.range(of: "Bootstrap Token escrowed to server: YES")) != nil {
+                os_log("Bootstrap Token already escrowed.", log: BBMechanism.log, type: .default)
+                return (true, true)
+            } else {
+                os_log("Bootstrap Token supported, but not escrowed.", log: BBMechanism.log, type: .default)
+                return (true, false)
+            }
         } else {
-            os_log("FileVault is OFF", log: BBMechanism.log, type: .error)
+            os_log("Bootstrap Token is not supported.", log: BBMechanism.log, type: .error)
             return (false, false)
         }
     }
-
-    func getFVEscrowInfo() -> (location: String, forced: Bool) {
-        let bundleid: CFString = "com.apple.security.FDERecoveryKeyEscrow" as CFString
-        let forced: Bool = CFPreferencesAppValueIsForced("Location" as CFString, bundleid)
-        guard
-            let location: String = CFPreferencesCopyAppValue("Location" as CFString, bundleid)
-                as? String
-        else { return ("(No Location Description)", forced) }
-        return (location, forced)
+    
+    // Check Bootstrap Token validity:
+    func checkBootstrapValidity() -> (Bool) {
+        os_log("Checking Bootstrap Token validity…", log: BBMechanism.log, type: .default)
+        let task = Process()
+        task.launchPath = "/usr/libexec/mdmclient"
+        task.arguments = ["QueryDeviceInformation"]
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.launch()
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        guard let output: String = String(data: data, encoding: String.Encoding.utf8)
+        else { return false }
+        if (output.range(of: "EACSPreflight = success")) != nil {
+            os_log("Bootstrap Token is valid.", log: BBMechanism.log, type: .default)
+            return true
+        } else {
+            os_log("Bootstrap Token is NOT valid.", log: BBMechanism.log, type: .error)
+            return false
+        }
     }
 }

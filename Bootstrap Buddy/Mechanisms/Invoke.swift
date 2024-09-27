@@ -38,64 +38,27 @@ class Invoke: BBMechanism {
     @objc func run() {
         os_log("Starting Bootstrap Buddy:Invoke", log: Invoke.log, type: .default)
 
-        // Get FileVault status
-        let fdestatus = getFVEnabled()
-        let fvEnabled: Bool = fdestatus.encrypted
-        let decrypting: Bool = fdestatus.decrypting
+        // Get Bootstrap Token status
+        let bootstrapstatus = getBootstrapStatus()
+        let btSupported: Bool = bootstrapstatus.supported
+        let btEscrowed: Bool = bootstrapstatus.escrowed
+        
+        // Get Bootstrap Token validity
+        let bootstrapvalid: Bool = checkBootstrapValidity()
 
-        // No action needed if FileVault is off or decrypting
-        if decrypting {
-            os_log(
-                "FileVault is decrypting", log: Invoke.log, type: .default)
+        // No action needed if Bootstrap token is escrowed or not supported
+        if !btSupported {
             allowLogin()
             return
         }
-        if !fvEnabled {
-            os_log(
-                "FileVault is not enabled", log: Invoke.log, type: .default)
-            allowLogin()
-            return
-        }
-
-        // Check for FileVault escrow profile
-        let escrowInfo = getFVEscrowInfo()
-        let escrowLocation = escrowInfo.location
-        let escrowForced = escrowInfo.forced
-
-        // Guard against triggering key generation without a valid escrow profile
-        if !escrowForced {
-            os_log(
-                "ERROR: No MDM profile for enforcing FileVault escrow is present.",
-                log: Invoke.log, type: .error)
-            allowLogin()
-            return
-        } else {
-            os_log(
-                "FileVault configured to escrow to: %{public}@", log: Invoke.log,
-                type: .default, escrowLocation)
-        }
-
-        // Get value of GenerateNewKey
-        let genKey = getGenerateNewKey()
-        let generateKey: Bool = genKey.generateKey
-        let forcedKey: Bool = genKey.forcedKey
-
-        // Guard against incorrect deployment of GenerateNewKey via MDM profile
-        if forcedKey {
-            os_log(
-                "ERROR: GenerateNewKey is set by an MDM profile. This is a configuration error! Use `defaults write` to set the preference instead.",
-                log: Invoke.log, type: .error)
-            allowLogin()
-            return
-        }
-
-        // If GenerateNewKey is False, the MDM already has a PRK escrowed for this Mac
-        if !generateKey {
-            os_log("GenerateNewKey is False", log: Invoke.log, type: .default)
-            allowLogin()
-            return
-        } else {
-            os_log("GenerateNewKey is True", log: Invoke.log, type: .default)
+        if btEscrowed {
+            if bootstrapvalid {
+                os_log("Bootstrap Token is escrowed and valid.", log: Invoke.log, type: .default)
+                allowLogin()
+                return
+            } else {
+                os_log("Bootstrap Token is escrowed, but invalid.", log: Invoke.log, type: .default)
+            }
         }
 
         // Instantiate dictionary with credentials
@@ -111,70 +74,43 @@ class Invoke: BBMechanism {
             allowLogin()
             return
         }
-        let the_settings = NSDictionary.init(dictionary: [
-            "Username": username, "Password": password,
-        ])
 
-        // GenerateNewKey is True, call fdesetup to generate new recovery key
-        os_log("Generating a new FileVault personal recovery key", log: Invoke.log, type: .default)
+        // EscrowBootstrapToken is True, call profiles to escrow Bootstrap Token
+        os_log("Escrowing Bootstrap Token…", log: Invoke.log, type: .default)
         do {
-            try _ = rotateRecoveryKey(the_settings)
+            try _ = escrowBootstrapToken(theUsername: username as String, thePassword: password as String)
         } catch let error as NSError {
             os_log(
-                "Caught error trying to generate a new key: %{public}@", log: Invoke.log,
+                "Caught error trying to escrow the token: %{public}@", log: Invoke.log,
                 type: .error,
                 error.localizedDescription)
         }
-
-        // Cleanup after key generation
-        os_log(
-            "Setting GenerateNewKey to False to avoid multiple generations",
-            log: Invoke.log, type: .default)
-        CFPreferencesSetValue(
-            "GenerateNewKey" as CFString, false as CFPropertyList, bundleid as CFString,
-            kCFPreferencesAnyUser, kCFPreferencesAnyHost)
-        CFPreferencesSetAppValue("GenerateNewKey" as CFString, nil, bundleid as CFString)
 
         allowLogin()
         return
     }
 
-    // fdesetup Errors
-    enum FileVaultError: Error {
-        case fdeSetupFailed(retCode: Int32)
+    // profiles Errors
+    enum ProfilesError: Error {
+        case profilesFailed(retCode: Int32)
         case outputPlistNull
         case outputPlistMalformed
     }
 
-    fileprivate func getGenerateNewKey() -> (generateKey: Bool, forcedKey: Bool) {
-        let forcedKey: Bool = CFPreferencesAppValueIsForced(
-            "GenerateNewKey" as CFString, bundleid as CFString)
-        guard
-            let genkey: Bool = CFPreferencesCopyAppValue(
-                "GenerateNewKey" as CFString, bundleid as CFString) as? Bool
-        else { return (false, forcedKey) }
-        return (genkey, forcedKey)
-    }
-
-    func rotateRecoveryKey(_ theSettings: NSDictionary) throws -> Bool {
-        os_log("rotateRecoveryKey called", log: Invoke.log, type: .default)
-        let inputPlist = try PropertyListSerialization.data(
-            fromPropertyList: theSettings,
-            format: PropertyListSerialization.PropertyListFormat.xml, options: 0)
+    func escrowBootstrapToken(theUsername: String, thePassword: String) throws -> Bool {
+        os_log("escrowBootstrapToken called", log: Invoke.log, type: .default)
 
         let inPipe = Pipe.init()
         let outPipe = Pipe.init()
         let errorPipe = Pipe.init()
 
         let task = Process.init()
-        task.launchPath = "/usr/bin/fdesetup"
-        task.arguments = ["changerecovery", "-personal", "-inputplist"]
+        task.launchPath = "/usr/bin/profiles"
+        task.arguments = ["install", "-type", "bootstraptoken", "-user", theUsername, "-password", thePassword]
         task.standardInput = inPipe
         task.standardOutput = outPipe
         task.standardError = errorPipe
         task.launch()
-        inPipe.fileHandleForWriting.write(inputPlist)
-        inPipe.fileHandleForWriting.closeFile()
         task.waitUntilExit()
 
         let errorOut = errorPipe.fileHandleForReading.readDataToEndOfFile()
@@ -184,14 +120,14 @@ class Invoke: BBMechanism {
         if task.terminationStatus != 0 {
             let termstatus = String(describing: task.terminationStatus)
             os_log(
-                "ERROR: fdesetup terminated with a non-zero exit status: %{public}@",
+                "ERROR: profiles command terminated with a non-zero exit status: %{public}@",
                 log: Invoke.log, type: .error, termstatus)
             os_log(
-                "fdesetup Standard Error: %{public}@", log: Invoke.log, type: .error,
+                "profiles Standard Error: %{public}@", log: Invoke.log, type: .error,
                 String(describing: errorMessage))
-            throw FileVaultError.fdeSetupFailed(retCode: task.terminationStatus)
+            throw ProfilesError.profilesFailed(retCode: task.terminationStatus)
         }
-        os_log("rotateRecoveryKey succeeded", log: Invoke.log, type: .default)
+        os_log("escrowBootstrapToken succeeded", log: Invoke.log, type: .default)
         return true
     }
 }
