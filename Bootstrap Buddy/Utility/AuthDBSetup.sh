@@ -4,6 +4,9 @@
 #  AuthDBSetup.sh
 #  Bootstrap Buddy
 #
+#  Copyright 2024 Inetum
+#
+#  Based on Escrow Buddy
 #  Copyright 2023 Netflix
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
