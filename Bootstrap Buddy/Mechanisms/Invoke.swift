@@ -64,13 +64,13 @@ class Invoke: BBMechanism {
         // Instantiate dictionary with credentials
         guard let username = self.username
         else {
-            os_log("Unable to instantiate username", log: Invoke.log, type: .error)
+            os_log("Unable to instantiate username.", log: Invoke.log, type: .error)
             allowLogin()
             return
         }
         guard let password = self.password
         else {
-            os_log("Unable to instantiate password", log: Invoke.log, type: .error)
+            os_log("Unable to instantiate password.", log: Invoke.log, type: .error)
             allowLogin()
             return
         }
@@ -103,6 +103,8 @@ class Invoke: BBMechanism {
         let inPipe = Pipe.init()
         let outPipe = Pipe.init()
         let errorPipe = Pipe.init()
+
+        os_log("Running profiles command for user %{public}@", log: Invoke.log, type: .debug, theUsername)
 
         let task = Process.init()
         task.launchPath = "/usr/bin/profiles"

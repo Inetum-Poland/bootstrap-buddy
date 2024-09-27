@@ -36,7 +36,7 @@ class BBMechanism: NSObject {
 
     // init the class with a MechanismRecord
     @objc init(mechanism: UnsafePointer<MechanismRecord>) {
-        os_log("initWithMechanismRecord", log: BBMechanism.log, type: .default)
+        os_log("• initWithMechanismRecord", log: BBMechanism.log, type: .default)
         self.mechanism = mechanism
     }
 
@@ -45,7 +45,7 @@ class BBMechanism: NSObject {
         os_log("allowLogin called", log: BBMechanism.log, type: .default)
         _ = self.mechanism.pointee.fPlugin.pointee.fCallbacks.pointee.SetResult(
             mechanism.pointee.fEngine, AuthorizationResult.allow)
-        os_log("Proceeding with login", log: BBMechanism.log, type: .default)
+        os_log("Proceeding with login.", log: BBMechanism.log, type: .default)
     }
 
     private func getContextData(key: AuthorizationString) -> NSData? {
@@ -78,7 +78,7 @@ class BBMechanism: NSObject {
     }
 
     var username: NSString? {
-        os_log("Requesting username", log: BBMechanism.log, type: .default)
+        os_log("Requesting username…", log: BBMechanism.log, type: .default)
         guard let data = getContextData(key: kAuthorizationEnvironmentUsername) else {
             return nil
         }
@@ -92,7 +92,7 @@ class BBMechanism: NSObject {
     }
 
     var password: NSString? {
-        os_log("Requesting password", log: BBMechanism.log, type: .default)
+        os_log("Requesting password…", log: BBMechanism.log, type: .default)
         guard let data = getContextData(key: kAuthorizationEnvironmentPassword) else {
             return nil
         }
