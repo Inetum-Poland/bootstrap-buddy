@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/bin/zsh
 
 #
-#  build_and_pkg.sh
+#  pkg.sh
 #  Bootstrap Buddy
 #
 #  Copyright 2024 Inetum
@@ -26,7 +26,6 @@
 set -e
 
 cd "$(dirname "$0")"
-xcodebuild -project "../Bootstrap Buddy/Bootstrap Buddy.xcodeproj" clean build analyze -configuration Release
 
 echo "Determining version..."
 VERSION=$(defaults read "$(pwd)/../Bootstrap Buddy/build/Release/Bootstrap Buddy.bundle/Contents/Info.plist" CFBundleShortVersionString)
@@ -43,11 +42,39 @@ cp -vR "../Bootstrap Buddy/build/Release/Bootstrap Buddy.bundle" "$PKGROOT/Libra
 echo "Building package..."
 OUTFILE="$OUTPUTDIR/Bootstrap Buddy-$VERSION.pkg"
 pkgbuild --root "$PKGROOT" \
-    --identifier com.inetum.Bootstrap-Buddy \
-    --version "$VERSION" \
-    --scripts pkg \
-    "$OUTFILE"
+	--identifier com.inetum.Bootstrap-Buddy \
+	--version "$VERSION" \
+	--scripts pkg \
+	"$OUTFILE"
+
+echo "Generating Distribution.xml…"
+productbuild --synthesize \
+			--package "${OUTFILE}" \
+			"${OUTFILE%/*}/Distribution.xml"
+
+echo "Creating the Product Archive…"
+productbuild --distribution "${OUTFILE%/*}/Distribution.xml" --package-path "${OUTFILE%/*}" "${OUTFILE%/*}/.tmp.pkg"
+
+echo; unset DECISION
+echo -e "Would you like to sign distribution package now? (y/n — no by default): \c"; read DECISION
+if grep -iq 'y' <<< $DECISION; then
+	echo -e "\nSigning the Product Archive…"
+	productsign --sign "Developer ID Installer: Developer Name (TEAM_ID)" "${OUTFILE%/*}/.tmp.pkg" "${OUTFILE}"
+	ASK2NOTARIZE=true
+else
+	cp "${OUTFILE%/*}/.tmp.pkg" "${OUTFILE}"
+	ASK2NOTARIZE=false
+fi
+
+rm -f "${OUTFILE%/*}/.tmp.pkg"
+rm -f "${OUTFILE%/*}/Distribution.xml"
 
 echo "Done."
 echo "$OUTFILE"
-# open "$OUTPUTDIR"
+open "$OUTPUTDIR"
+
+if $ASK2NOTARIZE; then
+	echo; unset DECISION
+	echo -e "Would you like to notarize distribution package now? (y/n — no by default): \c"; read DECISION
+	grep -iq 'y' <<< $DECISION && "$(dirname "$0")/notarizePKG.sh"
+fi
