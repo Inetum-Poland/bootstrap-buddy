@@ -2,7 +2,7 @@
 
 #
 #  build_and_pkg.sh
-#  Escrow Buddy
+#  Bootstrap Buddy
 #
 #  Copyright 2023 Netflix
 #
@@ -23,24 +23,24 @@
 set -e
 
 cd "$(dirname "$0")"
-xcodebuild -project "../Escrow Buddy/Escrow Buddy.xcodeproj" clean build analyze -configuration Release
+xcodebuild -project "../Bootstrap Buddy/Bootstrap Buddy.xcodeproj" clean build analyze -configuration Release
 
 echo "Determining version..."
-VERSION=$(defaults read "$(pwd)/../Escrow Buddy/build/Release/Escrow Buddy.bundle/Contents/Info.plist" CFBundleShortVersionString)
+VERSION=$(defaults read "$(pwd)/../Bootstrap Buddy/build/Release/Bootstrap Buddy.bundle/Contents/Info.plist" CFBundleShortVersionString)
 echo "  Version: $VERSION"
 
 echo "Preparing pkgroot and output folders..."
-PKGROOT=$(mktemp -d /tmp/Escrow-Buddy-build-root-XXXXXXXXXXX)
-OUTPUTDIR=$(mktemp -d /tmp/Escrow-Buddy-output-XXXXXXXXXXX)
+PKGROOT=$(mktemp -d /tmp/Bootstrap-Buddy-build-root-XXXXXXXXXXX)
+OUTPUTDIR=$(mktemp -d /tmp/Bootstrap-Buddy-output-XXXXXXXXXXX)
 mkdir -pv "$PKGROOT/Library/Security/SecurityAgentPlugins/"
 
 # echo "Copying bundle into pkgroot..."
-cp -vR "../Escrow Buddy/build/Release/Escrow Buddy.bundle" "$PKGROOT/Library/Security/SecurityAgentPlugins/Escrow Buddy.bundle"
+cp -vR "../Bootstrap Buddy/build/Release/Bootstrap Buddy.bundle" "$PKGROOT/Library/Security/SecurityAgentPlugins/Bootstrap Buddy.bundle"
 
 echo "Building package..."
-OUTFILE="$OUTPUTDIR/Escrow Buddy-$VERSION.pkg"
+OUTFILE="$OUTPUTDIR/Bootstrap Buddy-$VERSION.pkg"
 pkgbuild --root "$PKGROOT" \
-    --identifier com.netflix.Escrow-Buddy \
+    --identifier com.inetum.Bootstrap-Buddy \
     --version "$VERSION" \
     --scripts pkg \
     "$OUTFILE"

@@ -1,6 +1,6 @@
 //
 //  Invoke.swift
-//  Escrow Buddy
+//  Bootstrap Buddy
 //
 //  Copyright 2023 Netflix
 //
@@ -25,15 +25,15 @@ import Foundation
 import Security
 import os.log
 
-class Invoke: EBMechanism {
+class Invoke: BBMechanism {
     // Log for the Invoke functions
-    private static let log = OSLog(subsystem: "com.netflix.Escrow-Buddy", category: "Invoke")
+    private static let log = OSLog(subsystem: "com.inetum.Bootstrap-Buddy", category: "Invoke")
 
     // Preference bundle id
-    fileprivate let bundleid = "com.netflix.Escrow-Buddy"
+    fileprivate let bundleid = "com.inetum.Bootstrap-Buddy"
 
     @objc func run() {
-        os_log("Starting Escrow Buddy:Invoke", log: Invoke.log, type: .default)
+        os_log("Starting Bootstrap Buddy:Invoke", log: Invoke.log, type: .default)
 
         // Get FileVault status
         let fdestatus = getFVEnabled()

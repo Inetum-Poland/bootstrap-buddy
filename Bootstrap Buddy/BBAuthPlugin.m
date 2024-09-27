@@ -1,6 +1,6 @@
 //
-//  EBAuthPlugin.m
-//  Escrow Buddy
+//  BBAuthPlugin.m
+//  Bootstrap Buddy
 //
 //  Copyright 2023 Netflix
 //
@@ -20,13 +20,13 @@
 //  Based on example from Thomas Burgin.
 //  https://github.com/tburgin/PSU_2015
 
-#import "EBAuthPlugin.h"
-#import "Escrow_Buddy-Swift.h" // Makes Swift classes available to ObjC
+#import "BBAuthPlugin.h"
+#import "Bootstrap_Buddy-Swift.h" // Makes Swift classes available to ObjC
 
 #pragma mark
 #pragma mark Entry Point Wrappers
 
-EBAuthPlugin *authorizationPlugin = nil;
+BBAuthPlugin *authorizationPlugin = nil;
 
 static OSStatus PluginDestroy(AuthorizationPluginRef inPlugin) {
     return [authorizationPlugin PluginDestroy:inPlugin];
@@ -66,7 +66,7 @@ extern OSStatus AuthorizationPluginCreate(
     const AuthorizationCallbacks *callbacks, AuthorizationPluginRef *outPlugin,
     const AuthorizationPluginInterface **outPluginInterface) {
     if (authorizationPlugin == nil) {
-        authorizationPlugin = [[EBAuthPlugin alloc] init];
+        authorizationPlugin = [[BBAuthPlugin alloc] init];
     }
 
     return [authorizationPlugin AuthorizationPluginCreate:callbacks
@@ -75,8 +75,8 @@ extern OSStatus AuthorizationPluginCreate(
 }
 
 #pragma mark
-#pragma mark EBAuthPlugin Implementation
-@implementation EBAuthPlugin
+#pragma mark BBAuthPlugin Implementation
+@implementation BBAuthPlugin
 
 - (OSStatus)AuthorizationPluginCreate:(const AuthorizationCallbacks *)callbacks
                             PluginRef:(AuthorizationPluginRef *)outPlugin

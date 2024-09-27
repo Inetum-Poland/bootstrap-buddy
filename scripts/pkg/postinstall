@@ -2,7 +2,7 @@
 
 #
 #  postinstall
-#  Escrow Buddy
+#  Bootstrap Buddy
 #
 #  Copyright 2023 Netflix
 #
@@ -19,6 +19,6 @@
 #  limitations under the License.
 #
 
-#  This is the postinstall script executed during Escrow Buddy's installation.
-echo "Adding Escrow Buddy to authorization database..."
-"$3/Library/Security/SecurityAgentPlugins/Escrow Buddy.bundle/Contents/Resources/AuthDBSetup.sh"
+#  This is the postinstall script executed during Bootstrap Buddy's installation.
+echo "Adding Bootstrap Buddy to authorization database..."
+"$3/Library/Security/SecurityAgentPlugins/Bootstrap Buddy.bundle/Contents/Resources/AuthDBSetup.sh"

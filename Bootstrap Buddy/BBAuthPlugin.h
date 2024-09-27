@@ -1,6 +1,6 @@
 //
-//  EBAuthPlugin.h
-//  Escrow Buddy
+//  BBAuthPlugin.h
+//  Bootstrap Buddy
 //
 //  Copyright 2023 Netflix
 //
@@ -26,7 +26,7 @@
 #include <Security/AuthorizationPlugin.h>
 #include <Security/AuthorizationTags.h>
 
-@interface EBAuthPlugin : NSObject
+@interface BBAuthPlugin : NSObject
 
 #pragma mark ***** Core Data Structures
 

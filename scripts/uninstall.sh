@@ -2,7 +2,7 @@
 
 #
 #  uninstall.sh
-#  Escrow Buddy
+#  Bootstrap Buddy
 #
 #  Copyright 2023 Netflix
 #
@@ -19,14 +19,14 @@
 #  limitations under the License.
 #
 
-#  This script uninstalls Escrow Buddy.
+#  This script uninstalls Bootstrap Buddy.
 
 AuthDBTeardown() {
     # Create temporary directory for storage of authorization database files
     # Using hyphen to prevent escape issues in PlistBuddy commands
-    EB_DIR="${TMPDIR:=/private/tmp}/com.netflix.Escrow-Buddy"
-    mkdir -pv "$EB_DIR"
-    AUTH_DB="$EB_DIR/auth.db"
+    BB_DIR="${TMPDIR:=/private/tmp}/com.inetum.Bootstrap-Buddy"
+    mkdir -pv "$BB_DIR"
+    AUTH_DB="$BB_DIR/auth.db"
 
     # Output current loginwindow auth database
     echo "Reading system.login.console section of authorization database..."
@@ -37,16 +37,16 @@ AuthDBTeardown() {
     fi
 
     # Check current loginwindow auth database for desired entry
-    if ! grep -q '<string>Escrow Buddy:Invoke,privileged</string>' "$AUTH_DB"; then
-        echo "Escrow Buddy is not configured in the loginwindow authorization database."
+    if ! grep -q '<string>Bootstrap Buddy:Invoke,privileged</string>' "$AUTH_DB"; then
+        echo "Bootstrap Buddy is not configured in the loginwindow authorization database."
         return
     fi
 
     # Create a backup copy
     cp "$AUTH_DB" "$AUTH_DB.backup"
 
-    echo "Removing Escrow Buddy from authorization database..."
-    INDEX=$(/usr/libexec/PlistBuddy -c "Print :mechanisms:" "$AUTH_DB" 2>/dev/null | grep -n "Escrow Buddy:Invoke,privileged" | awk -F ":" '{print $1}')
+    echo "Removing Bootstrap Buddy from authorization database..."
+    INDEX=$(/usr/libexec/PlistBuddy -c "Print :mechanisms:" "$AUTH_DB" 2>/dev/null | grep -n "Bootstrap Buddy:Invoke,privileged" | awk -F ":" '{print $1}')
     if [[ -z $INDEX ]]; then
         echo "ERROR: Unable to index current loginwindow authorization database."
         exit 1
@@ -55,7 +55,7 @@ AuthDBTeardown() {
     # Subtract 2 from the index to account for PlistBuddy output format
     INDEX=$((INDEX-2))
 
-    # Remove Escrow Buddy mechanism
+    # Remove Bootstrap Buddy mechanism
     /usr/libexec/PlistBuddy -c "Delete :mechanisms:$INDEX" "$AUTH_DB"
 
     # Save authorization database changes
@@ -66,13 +66,13 @@ AuthDBTeardown() {
 }
 
 # If in-bundle AuthDB teardown script exists on disk, prefer using that
-echo "Removing Escrow Buddy from authorization database..."
-"/Library/Security/SecurityAgentPlugins/Escrow Buddy.bundle/Contents/Resources/AuthDBTeardown.sh" || AuthDBTeardown
+echo "Removing Bootstrap Buddy from authorization database..."
+"/Library/Security/SecurityAgentPlugins/Bootstrap Buddy.bundle/Contents/Resources/AuthDBTeardown.sh" || AuthDBTeardown
 
-echo "Deleting Escrow Buddy bundle..."
-rm -rf "/Library/Security/SecurityAgentPlugins/Escrow Buddy.bundle"
+echo "Deleting Bootstrap Buddy bundle..."
+rm -rf "/Library/Security/SecurityAgentPlugins/Bootstrap Buddy.bundle"
 
 echo "Forgetting receipt..."
-pkgutil --forget "com.netflix.Escrow-Buddy" 2>/dev/null
+pkgutil --forget "com.inetum.Bootstrap-Buddy" 2>/dev/null
 
-echo "Escrow Buddy successfully uninstalled."
+echo "Bootstrap Buddy successfully uninstalled."

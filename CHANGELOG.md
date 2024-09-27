@@ -1,4 +1,4 @@
-# Escrow Buddy Change Log
+# Bootstrap Buddy Change Log
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/).
 
@@ -8,6 +8,6 @@ All notable changes to this project will be documented in this file. This projec
 
 Nothing yet.
 
-## 1.0.0 - 2023-06-12
+## 1.0.0 - 2024-09-27
 
-- Initial public release of Escrow Buddy
+- Initial public release of Bootstrap Buddy

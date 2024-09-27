@@ -1,6 +1,6 @@
 //
-//  Escrow Buddy-Bridging-Header.h
-//  Escrow Buddy
+//  Bootstrap Buddy-Bridging-Header.h
+//  Bootstrap Buddy
 //
 //  Copyright 2023 Netflix
 //
@@ -17,4 +17,4 @@
 //  limitations under the License.
 //
 
-#import "EBAuthPlugin.h"
+#import "BBAuthPlugin.h"
