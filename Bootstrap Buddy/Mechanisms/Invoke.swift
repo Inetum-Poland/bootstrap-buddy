@@ -2,7 +2,7 @@
 //  Invoke.swift
 //  Bootstrap Buddy
 //
-//  Copyright 2024 Inetum
+//  Copyright 2024 Inetum Poland
 //
 //  Based on Escrow Buddy
 //  Copyright 2023 Netflix
@@ -42,7 +42,7 @@ class Invoke: BBMechanism {
         let bootstrapstatus = getBootstrapStatus()
         let btSupported: Bool = bootstrapstatus.supported
         let btEscrowed: Bool = bootstrapstatus.escrowed
-        
+
         // Get Bootstrap Token validity
         let bootstrapvalid: Bool = checkBootstrapValidity()
 

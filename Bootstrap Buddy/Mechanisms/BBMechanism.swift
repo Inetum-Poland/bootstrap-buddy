@@ -2,7 +2,7 @@
 //  BBMechanism.swift
 //  Bootstrap Buddy
 //
-//  Copyright 2024 Inetum
+//  Copyright 2024 Inetum Poland
 //
 //  Based on Escrow Buddy
 //  Copyright 2023 Netflix
@@ -104,7 +104,7 @@ class BBMechanism: NSObject {
         else { return nil }
         return s.replacingOccurrences(of: "\0", with: "") as NSString
     }
-    
+
     // profiles Errors
     private enum ProfilesError: Error {
         case profilesFailed(retCode: Int32)
@@ -137,7 +137,7 @@ class BBMechanism: NSObject {
             return (false, false)
         }
     }
-    
+
     // Check Bootstrap Token validity:
     func checkBootstrapValidity() -> (Bool) {
         os_log("Checking Bootstrap Token validity…", log: BBMechanism.log, type: .default)

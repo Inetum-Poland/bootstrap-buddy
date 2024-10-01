@@ -2,7 +2,7 @@
 //  BBAuthPlugin.h
 //  Bootstrap Buddy
 //
-//  Copyright 2024 Inetum
+//  Copyright 2024 Inetum Poland
 //
 //  Based on Escrow Buddy
 //  Copyright 2023 Netflix
