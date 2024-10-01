@@ -4,7 +4,7 @@
 #  notarizePKG.sh
 #  Bootstrap Buddy
 #
-#  Copyright 2024 Inetum
+#  Copyright 2024 Inetum Poland
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
