@@ -1,6 +1,6 @@
 ---
 name: Issue
-about: Report a bug, suggest a feature, or ask for help with Escrow Buddy.
+about: Report a bug, suggest a feature, or ask for help with Bootstrap Buddy.
 ---
 
 **Summary**
@@ -17,9 +17,9 @@ _Replace this text with a description of the behavior you expected to see instea
 
 **Environment**
 
-- Escrow Buddy version: [e.g. 1.0.0]
-- macOS version: [e.g. Ventura 13.4]
-- MDM version: [e.g. Jamf 10.46.0]
+- Bootstrap Buddy version: [e.g. 1.0.0]
+- macOS version: [e.g. Sequoia 15.0]
+- MDM version: [e.g. Jamf Pro 11.19.2]
 
 **Additional Context**
 

@@ -1,83 +1,110 @@
 name: Package merges to main
 
 on:
-  push:
-    branches:
-    - main
-    paths-ignore:
-    - '.github/**'
-    - 'images/**'
-    - '**/CHANGELOG.md'
-    - '**/README.md'
+  workflow_dispatch:
 
 jobs:
   build:
     name: Xcode build and analyze
-    runs-on: macos-13
+    runs-on: macos-15
+    env:
+      PROJECT_NAME: "Bootstrap Buddy"
+      IDENTIFIER: "com.inetum.Bootstrap-Buddy"
+      XCODE_PATH: "/Applications/Xcode_16.app"
+      INSTALLER_CERTIFICATE: "Developer ID Installer: Adrian Walaszek (C8GR948K5Q)"
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install app signing certificates
-        uses: apple-actions/import-codesign-certs@8f3fb608891dd2244cdab3d69cd68c0d37a7fe93 # v2.0.0
+        uses: apple-actions/import-codesign-certs@v3 # v3.0.0
         with:
           keychain-password: ${{ github.run_id }}
-          p12-file-base64: ${{ secrets.APP_CERTIFICATES_P12_MAOS }}
-          p12-password: ${{ secrets.APP_CERTIFICATES_P12_PASSWORD_MAOS }}
+          p12-file-base64: ${{ secrets.APP_CERTIFICATE_P12 }}
+          p12-password: ${{ secrets.APP_CERTIFICATE_P12_PASSWORD }}
 
       - name: Install package signing certificates
-        uses: apple-actions/import-codesign-certs@8f3fb608891dd2244cdab3d69cd68c0d37a7fe93 # v2.0.0
+        uses: apple-actions/import-codesign-certs@v3 # v3.0.0
         with:
           create-keychain: false # do not create a new keychain for this value
           keychain-password: ${{ github.run_id }}
-          p12-file-base64: ${{ secrets.PKG_CERTIFICATES_P12_MAOS }}
-          p12-password: ${{ secrets.PKG_CERTIFICATES_P12_PASSWORD_MAOS }}
+          p12-file-base64: ${{ secrets.PKG_CERTIFICATE_P12 }}
+          p12-password: ${{ secrets.PKG_CERTIFICATE_P12_PASSWORD }}
 
       - name: Build and analyze bundle
         run: |
-          xcodebuild -project "Escrow Buddy/Escrow Buddy.xcodeproj" clean build analyze -configuration Release
+          xcodebuild -project "${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}.xcodeproj" clean build analyze -configuration Release
+
+      - name: Setup notarization
+        run: |
+          "${{ env.XCODE_PATH }}/Contents/Developer/usr/bin/notarytool" store-credentials \
+            --key /dev/stdin \
+            --key-id "${{ secrets.NOTARY_AUTH_KEY_ID }}" \
+            --issuer "${{ secrets.NOTARY_ISSUER_UUID }}" \
+            default <<< "${{ secrets.NOTARY_AUTH_KEY }}"
+
+      - name: Notarize bundle
+        run: |
+          BUNDLE="${{ env.PROJECT_NAME }}/build/Release/${{ env.PROJECT_NAME }}"
+          xattr -rc "${BUNDLE}.bundle"
+          ditto -c -k --keepParent "${BUNDLE}.bundle" "${BUNDLE}.zip"
+          "${{ env.XCODE_PATH }}/Contents/Developer/usr/bin/notarytool" submit \
+            "${BUNDLE}.zip" \
+            --keychain-profile "default" \
+            --wait
+          "${{ env.XCODE_PATH }}/Contents/Developer/usr/bin/stapler" staple \
+            "${BUNDLE}.bundle"
+          rm "${BUNDLE}.zip"
 
       - name: Set environment variables
         id: set_env_var
         run: |
-          echo "VERSION=$(/usr/libexec/PlistBuddy -c "Print:CFBundleShortVersionString" "Escrow Buddy/build/Release/Escrow Buddy.bundle/Contents/Info.plist")" >> $GITHUB_ENV
+          VERSION=$(/usr/libexec/PlistBuddy -c "Print:CFBundleShortVersionString" "${{ env.PROJECT_NAME }}/build/Release/${{ env.PROJECT_NAME }}.bundle/Contents/Info.plist")
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "PKG_NAME=${{ env.PROJECT_NAME }}-${VERSION}" >> "$GITHUB_ENV"
+          echo "PKG_PATH=${{ env.PROJECT_NAME }}/build" >> "$GITHUB_ENV"
 
       - name: Build installer package
         run: |
-          PKGROOT=$(mktemp -d /tmp/Escrow-Buddy-build-root-XXXXXXXXXXX)
+          ID="${{ env.IDENTIFIER }}"
+          PKGROOT=$(mktemp -d /tmp/${ID##*.}-build-root-XXXXXXXXXXX)
           mkdir -p "$PKGROOT/Library/Security/SecurityAgentPlugins"
-          cp -R "Escrow Buddy/build/Release/Escrow Buddy.bundle" "$PKGROOT/Library/Security/SecurityAgentPlugins/Escrow Buddy.bundle"
+          cp -R "${{ env.PKG_PATH }}/Release/${{ env.PROJECT_NAME }}.bundle" "$PKGROOT/Library/Security/SecurityAgentPlugins/${{ env.PROJECT_NAME }}.bundle"
           pkgbuild --root "$PKGROOT" \
-            --identifier com.netflix.Escrow-Buddy \
+            --identifier "${ID}" \
             --version "${{ env.VERSION }}" \
             --scripts scripts/pkg \
-            "Escrow Buddy/build/Escrow Buddy-${{ env.VERSION }}-unsigned.pkg"
+            "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-unsigned.pkg"
+
+      - name: Convert to distribution package
+        run: |
+          productbuild --synthesize \
+            --package "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-unsigned.pkg" \
+            "${{ env.PKG_PATH }}/Distribution.xml"
+          productbuild --distribution \
+            "${{ env.PKG_PATH }}/Distribution.xml" \
+            --package-path "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-unsigned.pkg" "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-distribution.pkg"
+          rm "${{ env.PKG_PATH }}/Distribution.xml" "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-unsigned.pkg"
 
       - name: Sign package
         run: |
-          productsign --sign "Developer ID Installer: Mac Admins Open Source (T4SK8ZXCXG)" \
-            "Escrow Buddy/build/Escrow Buddy-${{ env.VERSION }}-unsigned.pkg" "Escrow Buddy/build/Escrow Buddy-${{ env.VERSION }}-signed.pkg"
+          productsign --sign "${{ env.INSTALLER_CERTIFICATE }}" \
+            "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-distribution.pkg" "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-signed.pkg"
 
       - name: Notarize package
         run: |
-          XCODE_PATH="/Applications/Xcode_14.2.app"
-          "$XCODE_PATH/Contents/Developer/usr/bin/notarytool" store-credentials \
-            --apple-id "opensource@macadmins.io" \
-            --team-id "T4SK8ZXCXG" \
-            --password "${{ secrets.NOTARY_APP_PASSWORD_MAOS }}" \
-            default
-          "$XCODE_PATH/Contents/Developer/usr/bin/notarytool" submit \
-            "Escrow Buddy/build/Escrow Buddy-${{ env.VERSION }}-signed.pkg" \
+          "${{ env.XCODE_PATH }}/Contents/Developer/usr/bin/notarytool" submit \
+            "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-signed.pkg" \
             --keychain-profile "default" \
             --wait
-          "$XCODE_PATH/Contents/Developer/usr/bin/stapler" staple \
-            "Escrow Buddy/build/Escrow Buddy-${{ env.VERSION }}-signed.pkg"
+          "${{ env.XCODE_PATH }}/Contents/Developer/usr/bin/stapler" staple \
+            "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-signed.pkg"
           mkdir -p artifacts
-          /bin/mv "Escrow Buddy/build/Escrow Buddy-${{ env.VERSION }}-signed.pkg" "artifacts/Escrow Buddy-${{ env.VERSION }}.pkg"
+          mv "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-signed.pkg" "artifacts/${{ env.PKG_NAME }}.pkg"
 
       - name: Upload packages
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@v4 # v4
         with:
           name: artifacts
           path: artifacts/
