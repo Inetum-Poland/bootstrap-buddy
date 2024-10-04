@@ -61,9 +61,9 @@ jobs:
         id: set_env_var
         run: |
           VERSION=$(/usr/libexec/PlistBuddy -c "Print:CFBundleShortVersionString" "${{ env.PROJECT_NAME }}/build/Release/${{ env.PROJECT_NAME }}.bundle/Contents/Info.plist")
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "PKG_NAME=\"${{ env.PROJECT_NAME }}-${VERSION}\"" >> $GITHUB_ENV
-          echo "PKG_PATH=\"${{ env.PROJECT_NAME }}/build\"" >> $GITHUB_ENV
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "PKG_NAME=${{ env.PROJECT_NAME }}-${VERSION}" >> "$GITHUB_ENV"
+          echo "PKG_PATH=${{ env.PROJECT_NAME }}/build" >> "$GITHUB_ENV"
 
       - name: Build installer package
         run: |
@@ -85,6 +85,7 @@ jobs:
           productbuild --distribution \
             "${{ env.PKG_PATH }}/Distribution.xml" \
             --package-path "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-unsigned.pkg" "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-distribution.pkg"
+          rm "${{ env.PKG_PATH }}/Distribution.xml" "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-unsigned.pkg"
 
       - name: Sign package
         run: |
