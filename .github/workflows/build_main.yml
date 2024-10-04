@@ -69,13 +69,14 @@ jobs:
         run: |
           ID="${{ env.IDENTIFIER }}"
           PKGROOT=$(mktemp -d /tmp/${ID##*.}-build-root-XXXXXXXXXXX)
-          mkdir -p "$PKGROOT/Library/Security/SecurityAgentPlugins"
-          cp -R "${{ env.PKG_PATH }}/Release/${{ env.PROJECT_NAME }}.bundle" "$PKGROOT/Library/Security/SecurityAgentPlugins/${{ env.PROJECT_NAME }}.bundle"
-          pkgbuild --root "$PKGROOT" \
+          mkdir -p "${PKGROOT}/Library/Security/SecurityAgentPlugins"
+          cp -R "${{ env.PKG_PATH }}/Release/${{ env.PROJECT_NAME }}.bundle" "${PKGROOT}/Library/Security/SecurityAgentPlugins/${{ env.PROJECT_NAME }}.bundle"
+          pkgbuild --root "${PKGROOT}" \
             --identifier "${ID}" \
             --version "${{ env.VERSION }}" \
             --scripts scripts/pkg \
             "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-unsigned.pkg"
+          rm -rf "${PKGROOT}"
 
       - name: Convert to distribution package
         run: |
@@ -84,8 +85,8 @@ jobs:
             "${{ env.PKG_PATH }}/Distribution.xml"
           productbuild --distribution \
             "${{ env.PKG_PATH }}/Distribution.xml" \
-            --package-path "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-unsigned.pkg" "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-distribution.pkg"
-          rm "${{ env.PKG_PATH }}/Distribution.xml" "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-unsigned.pkg"
+            --package-path "${{ env.PKG_PATH }}" "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-distribution.pkg"
+          rm -f "${{ env.PKG_PATH }}/Distribution.xml" "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-unsigned.pkg"
 
       - name: Sign package
         run: |
