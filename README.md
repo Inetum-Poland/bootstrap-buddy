@@ -9,11 +9,11 @@ It is entirely based on [Escrow Buddy](https://github.com/macadmins/escrow-buddy
 ## Requirements
 
 - Managed Mac computers must:
-    - be enrolled in an MDM
-    - run macOS Ventura 13.3 or later*
+  - be enrolled in an MDM
+  - run macOS Ventura 13.3 or later*
 - The MDM must:
-    - support Bootstrap Token escrow
-    - be capable of installing packages**
+  - support Bootstrap Token escrow
+  - be capable of installing packages**
 
 \* while the authorization plugin itself requires only macOS Mojave 10.14.4 or later, Bootstrap Token validation depends on functionality introduced in macOS 13.3.  
 \** the ability to run scripts is optional, but may be useful for deactivating, reactivating, or uninstalling the authorization plugin on demand.
@@ -42,6 +42,7 @@ For a faster and more focused response, be sure to provide the following in your
 - macOS version you’re deploying to
 - MDM (name and version) you’re using
 - What troubleshooting steps you’ve already taken
+- Any relevant error messages or unexpected behavior observed
 
 ---
 
