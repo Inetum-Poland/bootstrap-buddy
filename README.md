@@ -10,23 +10,23 @@ It is entirely based on [Escrow Buddy](https://github.com/macadmins/escrow-buddy
 
 - Managed Mac computers must:
   - be enrolled in an MDM
-  - run macOS Ventura 13.3 or later*
+  - run macOS Ventura 13.3 or later[^1]
 - The MDM must:
   - support Bootstrap Token escrow
-  - be capable of installing packages**
+  - be capable of installing packages[^2]
 
-\* while the authorization plugin itself requires only macOS Mojave 10.14.4 or later, Bootstrap Token validation depends on functionality introduced in macOS 13.3.  
-\** the ability to run scripts is optional, but may be useful for deactivating, reactivating, or uninstalling the authorization plugin on demand.
+[^1]: While the authorization plugin itself requires only macOS Mojave 10.14.4 or later, Bootstrap Token validation depends on functionality introduced in macOS 13.3.
+[^2]: MDM server’s ability to run scripts is optional, but may be useful for deactivating, reactivating, or uninstalling the authorization plugin on demand.</sup>
 
 ---
 
 ## Deployment
 
-1. Use your MDM to **install the [latest Bootstrap Buddy installer package](https://github.com/Inetum-Poland/bootstrap-buddy/releases/latest)** on your Mac computers.
+Use your MDM to **install the [latest Bootstrap Buddy installer package](https://github.com/Inetum-Poland/bootstrap-buddy/releases/latest)** on your Mac computers.
+And that’s it! The next time a Volume Owner logs into the Mac, a new Bootstrap Token will be escrowed to your MDM server.
 
-    While you can install it on all machines, it is recommended to limit deployment to those requiring Bootstrap Token escrow.
-
-That’s it! The next time a Volume Owner logs into the Mac, a new Bootstrap Token will be escrowed to your MDM.
+> [!IMPORTANT]  
+> While you can install it on all machines, it is recommended to limit deployment to those requiring Bootstrap Token escrow/fix.
 
 ---
 
@@ -56,9 +56,11 @@ Contributions don’t have to be code; we appreciate any help maintaining our [w
 
 ## Credits
 
-Bootstrap Buddy was created by **Apple Business Unit** at **Inetum Polska Sp. z o.o.**.
+Bootstrap Buddy was created by **Apple Business Unit** at **Inetum Polska Sp. z o.o.**  
 It is however entirely based on Escrow Buddy created by the **Netflix Client Systems Engineering** team.
 
 The [Crypt](https://github.com/grahamgilbert/crypt) project was a major inspiration in the creation of Escrow Buddy — huge thanks to Graham, Wes, and the Crypt team! Jeremy Baker and Tom Burgin’s 2015 PSU MacAdmins [session](https://www.youtube.com/watch?v=tcmql5byA_I) on authorization plugins was also a valuable resource.
 
 Escrow Buddy is licensed under the [Apache License, version 2.0](https://www.apache.org/licenses/LICENSE-2.0) and so is the Bootstrap Buddy.
+
+ 

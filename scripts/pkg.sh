@@ -25,6 +25,8 @@
 # Fail script if any command fails
 set -e
 
+DEV_INSTALLER_CERT_CN="Developer ID Installer: Developer Name (TEAM_ID)"
+
 cd "$(dirname "$0")"
 
 echo "Determining version..."
@@ -34,44 +36,36 @@ echo "  Version: $VERSION"
 echo "Preparing pkgroot and output folders..."
 PKGROOT=$(mktemp -d /tmp/Bootstrap-Buddy-build-root-XXXXXXXXXXX)
 OUTPUTDIR=$(mktemp -d /tmp/Bootstrap-Buddy-output-XXXXXXXXXXX)
-mkdir -pv "$PKGROOT/Library/Security/SecurityAgentPlugins/"
+mkdir -pv "${PKGROOT}/Library/Security/SecurityAgentPlugins/"
 
 # echo "Copying bundle into pkgroot..."
-cp -vR "../Bootstrap Buddy/build/Release/Bootstrap Buddy.bundle" "$PKGROOT/Library/Security/SecurityAgentPlugins/Bootstrap Buddy.bundle"
+cp -vR "../Bootstrap Buddy/build/Release/Bootstrap Buddy.bundle" "${PKGROOT}/Library/Security/SecurityAgentPlugins/Bootstrap Buddy.bundle"
 
 echo "Building package..."
-OUTFILE="$OUTPUTDIR/Bootstrap Buddy-$VERSION.pkg"
+OUTFILE="${OUTPUTDIR}/Bootstrap Buddy-$VERSION.pkg"
 pkgbuild --root "$PKGROOT" \
 	--identifier com.inetum.Bootstrap-Buddy \
 	--version "$VERSION" \
 	--scripts pkg \
-	"$OUTFILE"
-
-echo "Generating Distribution.xml…"
-productbuild --synthesize \
-			--package "${OUTFILE}" \
-			"${OUTFILE%/*}/Distribution.xml"
-
-echo "Creating the Product Archive…"
-productbuild --distribution "${OUTFILE%/*}/Distribution.xml" --package-path "${OUTFILE%/*}" "${OUTFILE%/*}/.tmp.pkg"
+	"${OUTFILE}"
 
 echo; unset DECISION
 echo -e "Would you like to sign distribution package now? (y/n — no by default): \c"; read DECISION
 if grep -iq 'y' <<< $DECISION; then
-	echo -e "\nSigning the Product Archive…"
-	productsign --sign "Developer ID Installer: Developer Name (TEAM_ID)" "${OUTFILE%/*}/.tmp.pkg" "${OUTFILE}"
+	echo -e "\nSigning distribution package…"
+	productbuild --sign "${DEV_INSTALLER_CERT_CN}" --package "${OUTFILE}" "${OUTFILE%/*}/.tmp.pkg"
 	ASK2NOTARIZE=true
 else
-	cp "${OUTFILE%/*}/.tmp.pkg" "${OUTFILE}"
+	productbuild --package "${OUTFILE}" "${OUTFILE%/*}/.tmp.pkg"
 	ASK2NOTARIZE=false
 fi
 
-rm -f "${OUTFILE%/*}/.tmp.pkg"
-rm -f "${OUTFILE%/*}/Distribution.xml"
+rm -f "${OUTFILE}"
+mv "${OUTFILE%/*}/.tmp.pkg" "${OUTFILE}"
 
 echo "Done."
-echo "$OUTFILE"
-open "$OUTPUTDIR"
+echo "${OUTFILE}"
+open "${OUTPUTDIR}"
 
 if $ASK2NOTARIZE; then
 	echo; unset DECISION
