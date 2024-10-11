@@ -77,23 +77,15 @@ jobs:
             --identifier "${ID}" \
             --version "${{ env.VERSION }}" \
             --scripts scripts/pkg \
-            "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-unsigned.pkg"
+            "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}.pkg"
           rm -rf "${PKGROOT}"
 
-      - name: Convert to distribution package
+      - name: Convert to distribution package and sign
         run: |
-          productbuild --synthesize \
-            --package "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-unsigned.pkg" \
-            "${{ env.PKG_PATH }}/Distribution.xml"
-          productbuild --distribution \
-            "${{ env.PKG_PATH }}/Distribution.xml" \
-            --package-path "${{ env.PKG_PATH }}" "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-distribution.pkg"
-          rm -f "${{ env.PKG_PATH }}/Distribution.xml" "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-unsigned.pkg"
-
-      - name: Sign package
-        run: |
-          productsign --sign "${{ env.INSTALLER_CERTIFICATE }}" \
-            "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-distribution.pkg" "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-signed.pkg"
+          productbuild --sign "${{ env.INSTALLER_CERTIFICATE }}" \
+            --package "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}.pkg" \
+            "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-signed.pkg"
+          rm -f "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}.pkg"
 
       - name: Notarize package
         run: |
