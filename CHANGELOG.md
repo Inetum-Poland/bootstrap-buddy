@@ -1,13 +1,59 @@
-# Bootstrap Buddy Change Log
+# Changelog
 
-All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/).
+All notable changes to this project will be documented in this file.
 
-<!-- markdownlint-disable MD024 -->
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+<!-- REMEMBER TO UPDATE LINKS AT THE BOTTOM :) -->
+
+## [Unreleased]
 
 Nothing yet.
+<!-- ### Added
 
-## 1.0.0 - 2024-09-27
+- First addition.
+- Second addition.
 
-- Initial public release of Bootstrap Buddy
+### Changed
+
+- First change.
+- Second change.
+
+### Fixed
+
+- First fix.
+- Second fix.
+
+### Removed
+
+- First removal.
+- Second removal. -->
+
+## [0.0.6] - 2024-10-11
+
+### Changed
+
+- Changelog format in now based on [Keep a Changelog](https://keepachangelog.com).
+
+### Fixed
+
+- Minor documentation improvements in Readme and Wiki.
+- Optimized distribution package creation in scripts and workflows.
+
+## [0.0.3] - 2024-10-04
+
+### Changed
+
+- Codesigning and notarization in workflows.
+
+## [0.0.1] - 2014-05-31
+
+### Added
+
+- Initial DevOps setup.
+
+[unreleased]: https://github.com/Inetum-Poland/bootstrap-buddy/compare/v0.0.6...HEAD
+[0.0.6]: https://github.com/Inetum-Poland/bootstrap-buddy/compare/v0.0.1...v0.0.6
+[0.0.3]: https://github.com/Inetum-Poland/bootstrap-buddy/compare/v0.0.1...v0.0.3
+[0.0.1]: https://github.com/Inetum-Poland/bootstrap-buddy/releases/tag/v0.0.1
