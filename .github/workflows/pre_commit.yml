@@ -1,3 +1,5 @@
+name: "Pre-Commit"
+
 on:
   push:
     branches:
@@ -6,21 +8,22 @@ on:
     branches:
       - main
 
+concurrency:
+  group: pre_commit_${{ github.ref }}
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  pre_commit:
+  verify:
+    name: "Verify"
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          sudo apt update
-          sudo apt install -y jq curl git bash
-          curl https://mise.run | sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-          echo "$HOME/.local/share/mise/shims" >> $GITHUB_PATH
-      - run: |
-          mise install
+
+      - uses: ./.github/actions/mise
+
       - run: |
           pre-commit run --show-diff-on-failure --color=always --all-files
+          pre-commit run --show-diff-on-failure --color=always --all-files --hook-stage=manual

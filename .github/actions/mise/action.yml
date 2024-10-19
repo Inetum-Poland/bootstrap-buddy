@@ -1,0 +1,14 @@
+name: "Mise"
+description: "Mise Installer"
+
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        sudo apt update
+        sudo apt install -y jq curl git bash
+        curl https://mise.run | sh
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        echo "$HOME/.local/share/mise/shims" >> $GITHUB_PATH
+        mise install

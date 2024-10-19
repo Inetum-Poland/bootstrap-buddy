@@ -1,3 +1,5 @@
+name: "Bumper"
+
 on:
   push:
     branches:
@@ -12,12 +14,16 @@ on:
       - reopened
       - synchronize
 
+concurrency:
+  group: bumper_${{ github.ref }}
+
 permissions:
   pull-requests: write
   contents: write
 
 jobs:
-  bumper:
+  tag:
+    name: "Tag"
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v3
