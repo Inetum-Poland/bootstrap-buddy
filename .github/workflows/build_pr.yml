@@ -11,6 +11,7 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'buildable')
     env:
       XCODE_PATH: "/Applications/Xcode_16.app"
+      # These variables are defined in the repository settings
       PROJECT_NAME: ${{ vars.PROJECT_NAME }}
       INSTALLER_CERTIFICATE: ${{ vars.DEV_INSTALLER_CERT_CN }}
 
@@ -104,3 +105,4 @@ jobs:
         with:
           name: ${{ env.PKG_NAME }}
           path: artifacts/
+          retention-days: 14
