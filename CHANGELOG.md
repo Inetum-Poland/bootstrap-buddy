@@ -30,7 +30,11 @@ Nothing yet.
 - First removal.
 - Second removal. -->
 
-## [0.0.6] - 2024-10-11
+## [1.0.0] - 2024-10-19
+
+### Added
+
+- Automation of build and release workflows to prepare for initial public release.
 
 ### Changed
 
@@ -53,7 +57,7 @@ Nothing yet.
 
 - Initial DevOps setup.
 
-[unreleased]: https://github.com/Inetum-Poland/bootstrap-buddy/compare/v0.0.6...HEAD
-[0.0.6]: https://github.com/Inetum-Poland/bootstrap-buddy/compare/v0.0.1...v0.0.6
+[unreleased]: https://github.com/Inetum-Poland/bootstrap-buddy/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/Inetum-Poland/bootstrap-buddy/compare/v0.0.3...v1.0.0
 [0.0.3]: https://github.com/Inetum-Poland/bootstrap-buddy/compare/v0.0.1...v0.0.3
 [0.0.1]: https://github.com/Inetum-Poland/bootstrap-buddy/releases/tag/v0.0.1

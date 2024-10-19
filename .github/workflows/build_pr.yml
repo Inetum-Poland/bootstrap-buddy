@@ -1,4 +1,4 @@
-name: Package pull requests
+name: "Package pull requests"
 
 on:
   pull_request_target:
@@ -6,28 +6,28 @@ on:
 
 jobs:
   build:
-    name: Xcode build and analyze
+    name: "Build artifact"
     runs-on: macos-15
     if: contains(github.event.pull_request.labels.*.name, 'buildable')
     env:
-      PROJECT_NAME: "Bootstrap Buddy"
-      IDENTIFIER: "com.inetum.Bootstrap-Buddy"
       XCODE_PATH: "/Applications/Xcode_16.app"
-      INSTALLER_CERTIFICATE: "Developer ID Installer: Adrian Walaszek (C8GR948K5Q)"
+      # These variables are defined in the repository settings
+      PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+      INSTALLER_CERTIFICATE: ${{ vars.DEV_INSTALLER_CERT_CN }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 # v4
 
-      - name: Install app signing certificates
-        uses: apple-actions/import-codesign-certs@v3 # v3.0.0
+      - name: Install app signing certificate
+        uses: apple-actions/import-codesign-certs@v3 # v3
         with:
           keychain-password: ${{ github.run_id }}
           p12-file-base64: ${{ secrets.APP_CERTIFICATE_P12 }}
           p12-password: ${{ secrets.APP_CERTIFICATE_P12_PASSWORD }}
 
-      - name: Install package signing certificates
-        uses: apple-actions/import-codesign-certs@v3 # v3.0.0
+      - name: Install package signing certificate
+        uses: apple-actions/import-codesign-certs@v3 # v3
         with:
           create-keychain: false # do not create a new keychain for this value
           keychain-password: ${{ github.run_id }}
@@ -60,9 +60,11 @@ jobs:
           rm "${BUNDLE}.zip"
 
       - name: Set environment variables
-        id: set_env_var
         run: |
-          VERSION=$(/usr/libexec/PlistBuddy -c "Print:CFBundleShortVersionString" "${{ env.PROJECT_NAME }}/build/Release/${{ env.PROJECT_NAME }}.bundle/Contents/Info.plist")
+          INFO_FILE="${{ env.PROJECT_NAME }}/build/Release/${{ env.PROJECT_NAME }}.bundle/Contents/Info.plist"
+          IDENTIFIER=$(/usr/libexec/PlistBuddy -c "Print:CFBundleIdentifier" "${INFO_FILE}")
+          echo "IDENTIFIER=${IDENTIFIER}" >> "$GITHUB_ENV"
+          VERSION=$(/usr/libexec/PlistBuddy -c "Print:CFBundleShortVersionString" "${INFO_FILE}")
           echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
           echo "PKG_NAME=${{ env.PROJECT_NAME }}-${VERSION}" >> "$GITHUB_ENV"
           echo "PKG_PATH=${{ env.PROJECT_NAME }}/build" >> "$GITHUB_ENV"
@@ -98,8 +100,9 @@ jobs:
           mkdir -p artifacts
           mv "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-signed.pkg" "artifacts/${{ env.PKG_NAME }}.pkg"
 
-      - name: Upload packages
+      - name: Upload package
         uses: actions/upload-artifact@v4 # v4
         with:
-          name: artifacts
+          name: ${{ env.PKG_NAME }}
           path: artifacts/
+          retention-days: 14
