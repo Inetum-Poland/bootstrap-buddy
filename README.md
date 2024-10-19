@@ -57,7 +57,9 @@ Contributions don’t have to be code; we appreciate any help maintaining our [w
 ## Credits
 
 Bootstrap Buddy was created by **Apple Business Unit** at **Inetum Polska Sp. z o.o.**  
-It is however entirely based on Escrow Buddy created by the **Netflix Client Systems Engineering** team.
+It is however entirely based on [Escrow Buddy](https://github.com/macadmins/escrow-buddy) created by the **Netflix Client Systems Engineering** team.
+
+Local method of validating escrowed bootstrap token by verifying eligibility to perform _Erase All Content and Settings_ is based on the feature introduced in v. [3.0b11](https://github.com/Macjutsu/super/blob/main/CHANGELOG.md#30b11) of the [S.U.P.E.R.M.A.N.](https://github.com/Macjutsu/super/tree/main) script by Kevin M. White, to whom the credit is due.
 
 The [Crypt](https://github.com/grahamgilbert/crypt) project was a major inspiration in the creation of Escrow Buddy — huge thanks to Graham, Wes, and the Crypt team! Jeremy Baker and Tom Burgin’s 2015 PSU MacAdmins [session](https://www.youtube.com/watch?v=tcmql5byA_I) on authorization plugins was also a valuable resource.
 
