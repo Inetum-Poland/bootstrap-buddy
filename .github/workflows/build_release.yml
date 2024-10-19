@@ -1,11 +1,11 @@
-name: "Package merges to main"
+name: "Package and Release"
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    name: "Build artifact"
+    name: "Build Release"
     runs-on: macos-15
     env:
       XCODE_PATH: "/Applications/Xcode_16.app"
@@ -64,6 +64,8 @@ jobs:
           VERSION=$(/usr/libexec/PlistBuddy -c "Print:CFBundleShortVersionString" "${INFO_FILE}")
           echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
           echo "PKG_NAME=${{ env.PROJECT_NAME }}-${VERSION}" >> "$GITHUB_ENV"
+          PKG_DOT_NAME="${{ env.PROJECT_NAME }}-${VERSION}"
+          echo "PKG_DOT_NAME=${PKG_DOT_NAME// /.}" >> "$GITHUB_ENV"
           echo "PKG_PATH=${{ env.PROJECT_NAME }}/build" >> "$GITHUB_ENV"
 
       - name: Build installer package
@@ -95,7 +97,74 @@ jobs:
           "${{ env.XCODE_PATH }}/Contents/Developer/usr/bin/stapler" staple \
             "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-signed.pkg"
           mkdir -p artifacts
-          mv "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-signed.pkg" "artifacts/${{ env.PKG_NAME }}.pkg"
+          mv "${{ env.PKG_PATH }}/${{ env.PKG_NAME }}-signed.pkg" "artifacts/${{ env.PKG_DOT_NAME }}.pkg"
+
+      - name: Generate checksum and define release date
+        run: |
+          CHECKSUM=$(sha256 -q "artifacts/${{ env.PKG_DOT_NAME }}.pkg")
+          echo "${CHECKSUM} ${{ env.PKG_DOT_NAME }}.pkg" > "artifacts/${{ env.PKG_DOT_NAME }}.pkg.sha256"
+          echo "CHECKSUM=${CHECKSUM}" >> "$GITHUB_ENV"
+          RELEASE_DATE="$(stat -f %Sm -t "%Y-%m-%d %H:%M:%S" "artifacts/${{ env.PKG_DOT_NAME }}.pkg")"
+          echo "RELEASE_DATE=${RELEASE_DATE}" >> "$GITHUB_ENV"
+
+      - name: Get latest release
+        id: latest
+        uses: pozetroninc/github-action-get-latest-release@v0.8.0 # v0.8.0
+        with:
+          repository: ${{ github.repository }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          excludes: prerelease, draft
+
+      - name: Get Changelog file entries
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2 # v2.2.2
+        with:
+          validation_depth: 50
+          version: ${{ env.VERSION }}
+
+      - name: Generate changelog
+        id: changelog
+        uses: metcalfc/changelog-generator@v4.3.1 # v4.3.1
+        with:
+          myToken: ${{ secrets.GITHUB_TOKEN }}
+          base-ref: ${{ steps.latest.outputs.release }}
+          head-ref: v${{ env.VERSION }}
+          reverse: 'true'
+
+      - name: Create Release
+        id: create_release
+        uses:   softprops/action-gh-release@v2 # v2
+        with:
+          name: ${{ vars.PROJECT_NAME }} ${{ env.VERSION }}
+          tag_name: v${{ env.VERSION }}
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: |
+              <sup>Release date: ${{ env.RELEASE_DATE }} UTC</sup>
+
+              ## Notes
+              This is a version of **${{ vars.PROJECT_NAME }}** created by GitHub Actions.
+              Both `${{ vars.PROJECT_NAME }}.bundle` and installation package have been signed, notarized and stapled.
+
+              For more information, read [Wiki](${{ github.server_url }}/${{ github.repository }}/wiki).
+
+              ## Changelog
+              ${{ steps.changelog_reader.outputs.changes }}
+
+              ## Changes since [${{ steps.latest.outputs.release }}](${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.latest.outputs.release }})
+              ${{ steps.changelog.outputs.changelog }}
+
+              #### Full Changelog: [${{ steps.latest.outputs.release }}...v${{ env.VERSION}}](${{ github.server_url }}/${{ github.repository }}/compare/${{ steps.latest.outputs.release }}...v${{ env.VERSION}})
+              <sup>Contributed by @bsojka</sup>
+              ___
+              #### SHA256 checksum of `${{ env.PKG_DOT_NAME }}.pkg`:
+              ```
+              ${{ env.CHECKSUM }}
+              ```
+          files: |
+            ${{ github.workspace }}/artifacts/*.pkg
+            ${{ github.workspace }}/artifacts/*.pkg.sha256
 
       - name: Upload package
         uses: actions/upload-artifact@v4 # v4
