@@ -38,6 +38,23 @@ class Invoke: BBMechanism {
     @objc func run() {
         os_log("Starting Bootstrap Buddy:Invoke", log: Invoke.log, type: .default)
 
+        // Check MDM reachability
+        if let mdm = getMDMServerDetails() {
+            let fqdn: String = mdm.fqdn
+            let port: UInt16 = mdm.port
+
+            let reachable: Bool = checkMDMReachability(fqdn: fqdn, port: port)
+            if !reachable {
+                os_log("MDM server unreachable.", log: Invoke.log, type: .error)
+                allowLogin()
+                return
+            }
+        } else {
+            os_log("Unable to retrieve MDM server details.", log: Invoke.log, type: .error)
+            allowLogin()
+            return
+        }
+
         // Get Bootstrap Token status
         let bootstrapstatus = getBootstrapStatus()
         let btSupported: Bool = bootstrapstatus.supported
