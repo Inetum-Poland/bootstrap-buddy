@@ -190,7 +190,7 @@ class BBMechanism: NSObject {
                 case .cancelled:
                     os_log("Connection was cancelled.", log: BBMechanism.log, type: .debug)
                 default:
-                    os_log("Unexpected connection state: %{public}@", log: BBMechanism.log, type: .error, state as! CVarArg)
+                    os_log("Unexpected connection state: %{public}@", log: BBMechanism.log, type: .error, String(describing: state))
                 }
             }
         }
