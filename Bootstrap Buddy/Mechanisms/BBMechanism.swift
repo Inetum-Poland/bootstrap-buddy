@@ -153,4 +153,57 @@ class BBMechanism: NSObject {
             return false
         }
     }
+
+    // Check if user at login window is and admin:
+    func checkAdminStatus(username: String) -> (Bool) {
+        os_log("Checking if user \"%{public}@\" is an admin…", log: BBMechanism.log, type: .default, username)
+        let task = Process()
+        task.launchPath = "/usr/bin/dscl"
+        task.arguments = [".", "read", "/Groups/admin", "GroupMembership"]
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.launch()
+        task.waitUntilExit()
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        guard let output: String = String(data: data, encoding: String.Encoding.utf8)
+        else { return false }
+        // Check if the username is in the output:
+        os_log("dscl output: %{public}@", log: BBMechanism.log, type: .debug, output)
+        os_log("Admin Status: %{public}@", log: BBMechanism.log, type: .debug, output.contains(username).description)
+        return output.contains(username)
+    }
+
+    // Elevate user to admin
+    func elevateUser(username: String) throws {
+        os_log("Temporarily adding user \"%{public}@\" to admin group…", log: BBMechanism.log, type: .default, username)
+        let task = Process()
+        task.launchPath = "/usr/bin/dscl"
+        task.arguments = [".", "append", "/Groups/admin", "GroupMembership", username]
+        task.launch()
+        task.waitUntilExit()
+        if task.terminationStatus != 0 {
+            let termstatus = String(describing: task.terminationStatus)
+            os_log(
+                "User elevation failed with a non-zero exit status: %{public}@",
+                log: BBMechanism.log, type: .error, termstatus)
+        }
+        os_log("User \"%{public}@\" elevated to admin.", log: BBMechanism.log, type: .default, username)
+    }
+
+    // Demote user to standard
+    func demoteUser(username: String) throws {
+        os_log("Removing user \"%{public}@\" from admin group…", log: BBMechanism.log, type: .default, username)
+        let task = Process()
+        task.launchPath = "/usr/bin/dscl"
+        task.arguments = [".", "delete", "/Groups/admin", "GroupMembership", username]
+        task.launch()
+        task.waitUntilExit()
+        if task.terminationStatus != 0 {
+            let termstatus = String(describing: task.terminationStatus)
+            os_log(
+                "User demotion failed with a non-zero exit status: %{public}@",
+                log: BBMechanism.log, type: .error, termstatus)
+        }
+        os_log("User \"%{public}@\" demoted to standard.", log: BBMechanism.log, type: .default, username)
+    }
 }
