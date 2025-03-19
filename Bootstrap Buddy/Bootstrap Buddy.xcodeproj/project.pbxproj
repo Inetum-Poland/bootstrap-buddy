@@ -287,8 +287,8 @@
 				INFOPLIST_KEY_NSHumanReadableCopyright = "@ 2024 Inetum Polska Sp. z o.o";
 				INFOPLIST_KEY_NSPrincipalClass = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Security/SecurityAgentPlugins";
-				MARKETING_VERSION = 1.0.0;
 				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				MARKETING_VERSION = 1.1.0;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.inetum.Bootstrap-Buddy";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -318,8 +318,8 @@
 				INFOPLIST_KEY_NSHumanReadableCopyright = "@ 2024 Inetum Polska Sp. z o.o";
 				INFOPLIST_KEY_NSPrincipalClass = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Security/SecurityAgentPlugins";
-				MARKETING_VERSION = 1.0.0;
 				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				MARKETING_VERSION = 1.1.0;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.inetum.Bootstrap-Buddy";
 				PRODUCT_NAME = "$(TARGET_NAME)";
