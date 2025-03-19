@@ -105,13 +105,6 @@ class BBMechanism: NSObject {
         return s.replacingOccurrences(of: "\0", with: "") as NSString
     }
 
-    // profiles Errors
-    private enum ProfilesError: Error {
-        case profilesFailed(retCode: Int32)
-        case outputPlistNull
-        case outputPlistMalformed
-    }
-
     // Check Bootstrap Token status, whether it's supported and escrowed:
     func getBootstrapStatus() -> (supported: Bool, escrowed: Bool) {
         os_log("Getting Bootstrap Token status…", log: BBMechanism.log, type: .default)
@@ -121,6 +114,7 @@ class BBMechanism: NSObject {
         let pipe = Pipe()
         task.standardOutput = pipe
         task.launch()
+        task.waitUntilExit()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         guard let output: String = String(data: data, encoding: String.Encoding.utf8)
         else { return (false, false) }
@@ -147,6 +141,7 @@ class BBMechanism: NSObject {
         let pipe = Pipe()
         task.standardOutput = pipe
         task.launch()
+        task.waitUntilExit()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         guard let output: String = String(data: data, encoding: String.Encoding.utf8)
         else { return false }
