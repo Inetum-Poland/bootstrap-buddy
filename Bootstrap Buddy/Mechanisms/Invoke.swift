@@ -38,6 +38,23 @@ class Invoke: BBMechanism {
     @objc func run() {
         os_log("Starting Bootstrap Buddy:Invoke", log: Invoke.log, type: .default)
 
+        // Check MDM reachability
+        if let mdm = getMDMServerDetails() {
+            let fqdn: String = mdm.fqdn
+            let port: UInt16 = mdm.port
+
+            let reachable: Bool = checkMDMReachability(fqdn: fqdn, port: port)
+            if !reachable {
+                os_log("MDM server unreachable.", log: Invoke.log, type: .error)
+                allowLogin()
+                return
+            }
+        } else {
+            os_log("Unable to retrieve MDM server details.", log: Invoke.log, type: .error)
+            allowLogin()
+            return
+        }
+
         // Get Bootstrap Token status
         let bootstrapstatus = getBootstrapStatus()
         let btSupported: Bool = bootstrapstatus.supported
@@ -75,6 +92,22 @@ class Invoke: BBMechanism {
             return
         }
 
+        // Check if the user at login window is an admin
+        let adminUser: Bool = checkAdminStatus(username: username as String)
+
+        // Elevate if not an admin
+        if !adminUser {
+            do {
+                try elevateUser(username: username as String)
+            } catch {
+                os_log(
+                    "Failed to add user to admin group: %{public}@", log: Invoke.log,
+                    type: .error, error.localizedDescription)
+                allowLogin()
+                return
+            }
+        }
+
         // EscrowBootstrapToken is True, call profiles to escrow Bootstrap Token
         os_log("Escrowing Bootstrap Token…", log: Invoke.log, type: .default)
         do {
@@ -84,6 +117,17 @@ class Invoke: BBMechanism {
                 "Caught error trying to escrow the token: %{public}@", log: Invoke.log,
                 type: .error,
                 error.localizedDescription)
+        }
+
+        // Demote previously elevated user
+        if !adminUser {
+            do {
+                try demoteUser(username: username as String)
+            } catch {
+                os_log(
+                    "ERROR: Failed to remove user from admin group: %{public}@", log: Invoke.log,
+                    type: .error, error.localizedDescription)
+            }
         }
 
         allowLogin()

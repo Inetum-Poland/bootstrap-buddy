@@ -30,6 +30,18 @@ Nothing yet.
 - First removal.
 - Second removal. -->
 
+## [1.1.0] - 2025-03-20
+
+### Added
+
+- Temporary user account privileges elevation for successful Bootstrap Token escrow on standard accounts.
+- Vendor–agnostic MDM server reachability check.
+- Additional LaunchDaemon in scripts to facilitate frequent plugin testing.
+
+### Changed
+
+- Refactored code and updated project settings.
+
 ## [1.0.0] - 2024-10-19
 
 ### Added
@@ -57,7 +69,8 @@ Nothing yet.
 
 - Initial DevOps setup.
 
-[unreleased]: https://github.com/Inetum-Poland/bootstrap-buddy/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/Inetum-Poland/bootstrap-buddy/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/Inetum-Poland/bootstrap-buddy/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Inetum-Poland/bootstrap-buddy/compare/v0.0.3...v1.0.0
 [0.0.3]: https://github.com/Inetum-Poland/bootstrap-buddy/compare/v0.0.1...v0.0.3
 [0.0.1]: https://github.com/Inetum-Poland/bootstrap-buddy/releases/tag/v0.0.1
